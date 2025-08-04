@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PET - Prompt Engineering Tetris</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+        
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.02) 2px,
+                    rgba(0, 255, 0, 0.02) 4px
+                );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #003300;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #00ff00;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #008800;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        /* Heart of Prompt */
+        .heart-section {
+            margin-bottom: 30px;
+            background: rgba(0, 34, 0, 0.3);
+            border: 2px solid #004400;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+        }
+        
+        .heart-label {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .heart-input {
+            width: 100%;
+            min-height: 80px;
+            background: #000;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 16px;
+            padding: 15px;
+            border-radius: 8px;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+        
+        .heart-input:focus {
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 0, 0.2),
+                0 0 20px rgba(0, 255, 0, 0.3);
+            border-color: #44ff44;
+        }
+        
+        .heart-examples {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #006600;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        /* Block Toolbox */
+        .toolbox {
+            margin-bottom: 25px;
+        }
+        
+        .toolbox-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #00aa00;
+        }
+        
+        .block-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 8px;
+            max-width: 100%;
+        }
+        
+        .block-button {
+            background: #002200;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.1s ease;
+            border-radius: 6px;
+            position: relative;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .block-button:hover {
+            background: #004400;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .block-button.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #001100;
+        }
+        
+        .block-symbol {
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #00aa00;
+            line-height: 1;
+        }
+        
+        .block-name {
+            font-size: 11px;
+            color: #00ff00;
+            font-weight: 700;
+        }
+        
+        .block-question {
+            font-size: 8px;
+            color: #006600;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+        
+        /* Workspace */
+        .workspace {
+            flex: 1;
+            margin-bottom: 25px;
+        }
+        
+        .workspace-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #00aa00;
+        }
+        
+        .blocks-container {
+            min-height: 150px;
+            border: 2px dashed #003300;
+            border-radius: 10px;
+            padding: 20px;
+            background: rgba(0, 17, 0, 0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #006600;
+            font-size: 12px;
+            padding: 40px 20px;
+            border: 1px dashed #003300;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+        
+        /* AI Suggestion Cards */
+        .suggestion-card {
+            background: rgba(0, 34, 0, 0.4);
+            border: 2px solid #004400;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            animation: suggestionAppear 0.5s ease-out;
+        }
+        
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .suggestion-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .suggestion-dismiss {
+            background: #002200;
+            border: 1px solid #004400;
+            color: #00aa00;
+            padding: 4px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.1s ease;
+        }
+        
+        .suggestion-dismiss:hover {
+            background: #004400;
+            color: #00ff00;
+        }
+        
+        .suggestion-preview {
+            background: #000;
+            border: 1px solid #003300;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            color: #008800;
+            min-height: 40px;
+            line-height: 1.4;
+        }
+        
+        .suggestion-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .suggestion-button {
+            background: #002200;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .suggestion-button:hover {
+            background: #004400;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+        
+        .suggestion-button.secondary {
+            border-color: #006600;
+            color: #006600;
+        }
+        
+        .suggestion-button.secondary:hover {
+            background: #002200;
+            border-color: #008800;
+            color: #008800;
+        }
+        
+        /* Prompt Blocks */
+        .prompt-block {
+            background: #001a00;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 255, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .prompt-block:hover {
+            box-shadow: 0 6px 20px rgba(0, 255, 0, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .block-header {
+            background: #003300;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #005500;
+        }
+        
+        .block-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .block-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .block-score {
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 3px;
+            background: #004400;
+            color: #00ff00;
+        }
+        
+        .control-button {
+            background: #002200;
+            border: 1px solid #00aa00;
+            color: #00aa00;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.1s ease;
+        }
+        
+        .control-button:hover {
+            background: #004400;
+            color: #00ff00;
+        }
+        
+        .control-button.delete:hover {
+            background: #440000;
+            border-color: #ff4400;
+            color: #ff4400;
+        }
+        
+        .block-content {
+            padding: 15px;
+        }
+        
+        .content-display {
+            min-height: 60px;
+            font-size: 14px;
+            line-height: 1.5;
+            cursor: text;
+            padding: 12px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .content-display:hover {
+            background: rgba(0, 68, 0, 0.2);
+            border-color: #004400;
+        }
+        
+        .content-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 6px;
+            resize: vertical;
+            outline: none;
+        }
+        
+        /* Constraint Progress Bar */
+        .constraint-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 17, 0, 0.3);
+            border: 2px solid #003300;
+            border-radius: 10px;
+        }
+        
+        .constraint-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        .constraint-bar {
+            width: 100%;
+            height: 35px;
+            background: #001100;
+            border: 2px solid #00ff00;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .constraint-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #44ff44);
+            width: 0%;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .constraint-fill.warning {
+            background: linear-gradient(90deg, #ffaa00, #ffcc44);
+        }
+        
+        .constraint-fill.danger {
+            background: linear-gradient(90deg, #ff4400, #ff6644);
+        }
+        
+        .constraint-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+            text-shadow: 1px 1px 0 #00ff00;
+            z-index: 2;
+        }
+        
+        .validation-score {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        /* Output Area */
+        .output-section {
+            background: #001100;
+            border: 2px solid #003300;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .output-label {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #00aa00;
+        }
+        
+        .output-content {
+            background: #000;
+            border: 1px solid #004400;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 120px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #00aa00;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 36px;
+                letter-spacing: 2px;
+            }
+            
+            .heart-input {
+                font-size: 14px;
+                min-height: 70px;
+            }
+            
+            .block-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+                gap: 6px;
+            }
+        }
+        
+        /* Animations */
+        .block-add-animation {
+            animation: blockAppear 0.4s ease-out;
+        }
+        
+        @keyframes blockAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .heart-glow {
+            animation: heartGlow 0.8s ease-in-out;
+        }
+        
+        @keyframes heartGlow {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.2); }
+            50% { box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.4), 0 0 30px rgba(0, 255, 0, 0.3); }
+        }
+        
+        .suggestion-appear {
+            animation: suggestionAppear 0.5s ease-out;
+        }
+        
+        @keyframes suggestionAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">PET</h1>
+            <div class="subtitle">Prompt Engineering Tetris</div>
+        </header>
+        
+        <!-- Heart of Prompt -->
+        <section class="heart-section">
+            <div class="heart-label">💡 WHAT DO YOU WANT THE AI TO HELP YOU WITH?</div>
+            <textarea 
+                class="heart-input" 
+                id="heartInput"
+                placeholder="Type your request in natural language...&#10;&#10;Examples:&#10;• Help me write a story about dragons&#10;• Analyze my sales data for trends&#10;• Explain quantum physics simply&#10;• Debug this Python code&#10;• Plan a birthday party for my 8-year-old"
+                rows="3"
+            ></textarea>
+            <div class="heart-examples">
+                Press Enter or wait 2 seconds after typing to get AI suggestions
+            </div>
+        </section>
+        
+        <!-- Block Toolbox -->
+        <section class="toolbox">
+            <div class="toolbox-label">🧱 ADD BLOCKS MANUALLY</div>
+            <div class="block-buttons">
+                <div class="block-button" data-type="who" data-symbol="T">
+                    <div class="block-symbol">▀▀▀<br>&nbsp;▀&nbsp;</div>
+                    <div class="block-name">WHO</div>
+                    <div class="block-question">Who is the AI?</div>
+                </div>
+                <div class="block-button" data-type="what" data-symbol="I">
+                    <div class="block-symbol">▀▀▀▀</div>
+                    <div class="block-name">WHAT</div>
+                    <div class="block-question">What should it do?</div>
+                </div>
+                <div class="block-button" data-type="dont" data-symbol="L">
+                    <div class="block-symbol">▀&nbsp;&nbsp;<br>▀&nbsp;&nbsp;<br>▀▀</div>
+                    <div class="block-name">DON'T</div>
+                    <div class="block-question">What to avoid?</div>
+                </div>
+                <div class="block-button" data-type="how" data-symbol="O">
+                    <div class="block-symbol">▀▀<br>▀▀</div>
+                    <div class="block-name">HOW</div>
+                    <div class="block-question">How to respond?</div>
+                </div>
+                <div class="block-button" data-type="think" data-symbol="S">
+                    <div class="block-symbol">&nbsp;▀▀<br>▀▀&nbsp;</div>
+                    <div class="block-name">THINK</div>
+                    <div class="block-question">Think step by step?</div>
+                </div>
+                <div class="block-button" data-type="show" data-symbol="Z">
+                    <div class="block-symbol">▀▀&nbsp;<br>&nbsp;▀▀</div>
+                    <div class="block-name">SHOW</div>
+                    <div class="block-question">Show examples?</div>
+                </div>
+                <div class="block-button" data-type="use" data-symbol="J">
+                    <div class="block-symbol">&nbsp;&nbsp;▀<br>&nbsp;&nbsp;▀<br>▀▀</div>
+                    <div class="block-name">USE</div>
+                    <div class="block-question">Use this content?</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Workspace -->
+        <section class="workspace">
+            <div class="workspace-label">🏗️ YOUR PROMPT WORKSPACE</div>
+            <div class="blocks-container" id="blocksContainer">
+                <div class="empty-state" id="emptyState">
+                    Start by typing what you want in the box above, or click a block type below.<br><br>
+                    Build your perfect AI prompt with simple building blocks!<br>
+                    Maximum 15 blocks. Order matters for the final prompt.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Constraint Progress Bar -->
+        <section class="constraint-section">
+            <div class="constraint-label" id="constraintLabel">BLOCKS: 0 / 15</div>
+            <div class="constraint-bar">
+                <div class="constraint-fill" id="constraintFill"></div>
+                <div class="constraint-text" id="constraintText">0/15</div>
+            </div>
+            <div class="validation-score" id="validationScore">SCORE: --/100</div>
+        </section>
+        
+        <!-- Output -->
+        <section class="output-section">
+            <div class="output-label">📤 YOUR COMPILED PROMPT</div>
+            <div class="output-content" id="outputContent">
+                Your final AI prompt will appear here automatically as you build...<br><br>
+                This is what you'll copy and paste to your favorite AI assistant!
+            </div>
+        </section>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/ai/prompt-engine.js"></script>
+    <script src="js/ai/ollama-integration.js"></script>
+    <script src="js/ai/gemma-3n-advanced.js"></script>
+    <script>
+        // Initialize AI Engines
+        const petAI = new PETAIEngine();
+        const petOllama = new PETOllamaIntegration();
+        const petGemmaAdvanced = new PETGemma3NAdvanced();
+        
+        // PET Core State
+        let petState = {
+            blocks: [],
+            maxBlocks: 15,
+            currentScore: 0,
+            blockIdCounter: 0,
+            heartPrompt: '',
+            activeSuggestions: [],
+            suggestionIdCounter: 0
+        };
+        
+        // Enhanced block type definitions
+        const blockTypes = {
+            who: {
+                symbol: 'T',
+                name: 'WHO',
+                question: 'Who is the AI?',
+                description: 'Define AI role and personality',
+                weight: 25
+            },
+            what: {
+                symbol: 'I',
+                name: 'WHAT',
+                question: 'What should it do?',
+                description: 'Main task or objective',
+                weight: 20
+            },
+            dont: {
+                symbol: 'L',
+                name: "DON'T",
+                question: 'What to avoid?',
+                description: 'Limitations and boundaries',
+                weight: 15
+            },
+            how: {
+                symbol: 'O',
+                name: 'HOW',
+                question: 'How to respond?',
+                description: 'Format and structure',
+                weight: 10
+            },
+            think: {
+                symbol: 'S',
+                name: 'THINK',
+                question: 'Think step by step?',
+                description: 'Show reasoning process',
+                weight: 15
+            },
+            show: {
+                symbol: 'Z',
+                name: 'SHOW',
+                question: 'Show examples?',
+                description: 'Provide demonstrations',
+                weight: 10
+            },
+            use: {
+                symbol: 'J',
+                name: 'USE',
+                question: 'Use this content?',
+                description: 'Raw material to process',
+                weight: 5
+            }
+        };
+        
+        // Initialize PET
+        function initializePET() {
+            setupEventListeners();
+            updateUI();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Heart prompt input
+            const heartInput = document.getElementById('heartInput');
+            heartInput.addEventListener('input', handleHeartInput);
+            heartInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateSuggestions();
+                }
+            });
+            
+            // Block button clicks
+            document.querySelectorAll('.block-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const blockType = e.currentTarget.dataset.type;
+                    addBlock(blockType);
+                });
+            });
+        }
+        
+        // Handle heart prompt input
+        function handleHeartInput(e) {
+            petState.heartPrompt = e.target.value;
+            
+            // Auto-generate suggestions after 2 seconds of no typing
+            clearTimeout(petState.suggestionTimeout);
+            petState.suggestionTimeout = setTimeout(() => {
+                if (petState.heartPrompt.trim().length > 10) {
+                    generateSuggestions();
+                }
+            }, 2000);
+            
+            // Add glow effect
+            e.target.classList.add('heart-glow');
+            setTimeout(() => e.target.classList.remove('heart-glow'), 800);
+        }
+        
+        // Generate AI suggestions using Advanced Gemma 3N (with fallback)
+        async function generateSuggestions() {
+            const heartPrompt = petState.heartPrompt.trim();
+            if (!heartPrompt || heartPrompt.length < 5) return;
+            
+            // Clear existing suggestions
+            clearSuggestions();
+            
+            // Show loading state
+            showLoadingState();
+            
+            try {
+                // Try Advanced Gemma 3N first, then regular Ollama, then fallback
+                let suggestions = await petGemmaAdvanced.generateSuggestions(heartPrompt, petState.blocks);
+                
+                if (suggestions.length === 0) {
+                    // Fallback to regular Ollama
+                    suggestions = await petOllama.generateSuggestions(heartPrompt, petState.blocks);
+                }
+                
+                if (suggestions.length === 0) {
+                    // Final fallback to rule-based AI
+                    suggestions = await petAI.generateSuggestions(heartPrompt, petState.blocks);
+                }
+                
+                if (suggestions.length > 0) {
+                    displaySuggestions(suggestions);
+                }
+            } catch (error) {
+                console.error('❌ Suggestion generation failed:', error);
+                // Fallback to rule-based AI
+                const fallbackSuggestions = await petAI.generateSuggestions(heartPrompt, petState.blocks);
+                if (fallbackSuggestions.length > 0) {
+                    displaySuggestions(fallbackSuggestions);
+                }
+            } finally {
+                hideLoadingState();
+            }
+        }
+        
+        // Show loading state
+        function showLoadingState() {
+            const container = document.getElementById('blocksContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-suggestions';
+            
+            // Determine which AI system to use
+            let aiSystem = 'rule-based AI';
+            let aiIcon = '🤖';
+            
+            if (petGemmaAdvanced.getStatus().isAvailable) {
+                aiSystem = 'Advanced Gemma 3N';
+                aiIcon = '🚀';
+            } else if (petOllama.getStatus().isAvailable) {
+                aiSystem = 'Gemma 3N';
+                aiIcon = '🤖';
+            }
+            
+            loadingDiv.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #00aa00;">
+                    <div style="font-size: 14px; margin-bottom: 10px;">${aiIcon} Generating AI suggestions...</div>
+                    <div style="font-size: 12px; color: #006600;">Using ${aiSystem}</div>
+                    <div style="font-size: 10px; color: #004400; margin-top: 5px;">
+                        ${petGemmaAdvanced.getStatus().trainingDataSize > 0 ? 
+                          `📊 Training data: ${petGemmaAdvanced.getStatus().trainingDataSize} examples` : 
+                          '📊 No training data yet'}
+                    </div>
+                </div>
+            `;
+            container.appendChild(loadingDiv);
+        }
+        
+        // Hide loading state
+        function hideLoadingState() {
+            const loadingDiv = document.getElementById('loading-suggestions');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+        
+        // Display suggestions in workspace
+        function displaySuggestions(suggestions) {
+            const container = document.getElementById('blocksContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+            
+            suggestions.forEach(suggestion => {
+                const suggestionCard = createSuggestionCard(suggestion);
+                container.appendChild(suggestionCard);
+                petState.activeSuggestions.push(suggestion);
+            });
+        }
+        
+        // Create suggestion card
+        function createSuggestionCard(suggestion) {
+            const blockData = blockTypes[suggestion.type];
+            const cardId = `suggestion_${petState.suggestionIdCounter++}`;
+            
+            // Get AI system indicator
+            let aiIndicator = '🤖';
+            let modelInfo = '';
+            
+            if (suggestion.model === 'fine-tuned') {
+                aiIndicator = '🚀';
+                modelInfo = 'Fine-tuned';
+            } else if (suggestion.model === 'base') {
+                aiIndicator = '🤖';
+                modelInfo = 'Base model';
+            } else if (suggestion.model === 'fallback') {
+                aiIndicator = '⚡';
+                modelInfo = 'Rule-based';
+            }
+            
+            // Confidence indicator
+            const confidence = suggestion.confidence || 0.8;
+            const confidenceColor = confidence >= 0.9 ? '#00ff00' : confidence >= 0.7 ? '#00aa00' : '#006600';
+            
+            const card = document.createElement('div');
+            card.className = 'suggestion-card';
+            card.id = cardId;
+            
+            card.innerHTML = `
+                <div class="suggestion-header">
+                    <div class="suggestion-title">
+                        <span>${aiIndicator} ${blockData.symbol}-BLOCK: ${blockData.name}</span>
+                        <span style="font-size: 10px; color: #006600;">(${blockData.question})</span>
+                    </div>
+                    <div class="suggestion-meta">
+                        <span style="font-size: 9px; color: ${confidenceColor}; margin-right: 8px;">
+                            ${Math.round(confidence * 100)}% confidence
+                        </span>
+                        <span style="font-size: 9px; color: #004400;">
+                            ${modelInfo}
+                        </span>
+                    </div>
+                    <div class="suggestion-dismiss" onclick="dismissSuggestion('${cardId}')">✗</div>
+                </div>
+                <div class="suggestion-preview" id="preview_${cardId}">
+                    ${suggestion.content}
+                </div>
+                <div class="suggestion-actions">
+                    <button class="suggestion-button" onclick="addSuggestedBlock('${cardId}', '${suggestion.type}')">
+                        + Add Block
+                    </button>
+                    <button class="suggestion-button secondary" onclick="dismissSuggestion('${cardId}')">
+                        Skip
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Add suggested block
+        function addSuggestedBlock(cardId, blockType) {
+            if (petState.blocks.length >= petState.maxBlocks) {
+                showConstraintWarning();
+                return;
+            }
+            
+            const card = document.getElementById(cardId);
+            const preview = document.getElementById(`preview_${cardId}`);
+            const content = preview.textContent;
+            
+            const blockData = blockTypes[blockType];
+            const newBlock = {
+                id: `block_${petState.blockIdCounter++}`,
+                type: blockType,
+                symbol: blockData.symbol,
+                name: blockData.name,
+                content: content,
+                active: true,
+                timestamp: Date.now(),
+                source: 'ai_suggestion'
+            };
+            
+            petState.blocks.push(newBlock);
+            
+            // Remove suggestion card
+            dismissSuggestion(cardId);
+            
+            // Render the new block
+            renderBlock(newBlock);
+            updateUI();
+        }
+        
+        // Dismiss suggestion
+        function dismissSuggestion(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.style.animation = 'suggestionAppear 0.3s ease-in reverse';
+                setTimeout(() => {
+                    card.remove();
+                    // Show empty state if no blocks and no suggestions
+                    if (petState.blocks.length === 0 && document.querySelectorAll('.suggestion-card').length === 0) {
+                        document.getElementById('emptyState').style.display = 'block';
+                    }
+                }, 300);
+            }
+        }
+        
+        // Clear all suggestions
+        function clearSuggestions() {
+            const suggestions = document.querySelectorAll('.suggestion-card');
+            suggestions.forEach(card => card.remove());
+            petState.activeSuggestions = [];
+        }
+        
+        // Add block to workspace (manual)
+        function addBlock(type) {
+            if (petState.blocks.length >= petState.maxBlocks) {
+                showConstraintWarning();
+                return;
+            }
+            
+            const blockData = blockTypes[type];
+            const newBlock = {
+                id: `block_${petState.blockIdCounter++}`,
+                type: type,
+                symbol: blockData.symbol,
+                name: blockData.name,
+                content: `[${blockData.description}] - Click to edit`,
+                active: true,
+                timestamp: Date.now(),
+                source: 'manual'
+            };
+            
+            petState.blocks.push(newBlock);
+            renderBlock(newBlock);
+            updateUI();
+            
+            // Animation
+            const blockElement = document.getElementById(newBlock.id);
+            blockElement.classList.add('block-add-animation');
+        }
+        
+        // Render block in workspace
+        function renderBlock(block) {
+            const container = document.getElementById('blocksContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+            
+            const blockElement = document.createElement('div');
+            blockElement.className = 'prompt-block';
+            blockElement.id = block.id;
+            
+            blockElement.innerHTML = `
+                <div class="block-header">
+                    <div class="block-title">
+                        <span>${block.symbol}-BLOCK: ${block.name}</span>
+                        <span style="font-size: 10px; color: #006600;">(${blockTypes[block.type].question})</span>
+                    </div>
+                    <div class="block-controls">
+                        <div class="block-score" id="score_${block.id}">--</div>
+                        <div class="control-button" onclick="moveBlockUp('${block.id}')" title="Move Up">↑</div>
+                        <div class="control-button" onclick="moveBlockDown('${block.id}')" title="Move Down">↓</div>
+                        <div class="control-button delete" onclick="removeBlock('${block.id}')" title="Remove Block">×</div>
+                    </div>
+                </div>
+                <div class="block-content">
+                    <div class="content-display" id="content_${block.id}" onclick="editBlock('${block.id}')">${block.content}</div>
+                </div>
+            `;
+            
+            container.appendChild(blockElement);
+        }
+        
+        // Edit block content
+        function editBlock(blockId) {
+            const block = petState.blocks.find(b => b.id === blockId);
+            if (!block) return;
+            
+            const contentDiv = document.getElementById(`content_${blockId}`);
+            const currentContent = block.content;
+            
+            // Create textarea
+            const textarea = document.createElement('textarea');
+            textarea.className = 'content-textarea';
+            textarea.value = currentContent;
+            
+            // Replace content with textarea
+            contentDiv.innerHTML = '';
+            contentDiv.appendChild(textarea);
+            
+            // Focus and select
+            textarea.focus();
+            textarea.select();
+            
+            // Handle save
+            const saveEdit = () => {
+                block.content = textarea.value || currentContent;
+                contentDiv.innerHTML = block.content;
+                updateUI();
+            };
+            
+            // Event listeners
+            textarea.addEventListener('blur', saveEdit);
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    saveEdit();
+                }
+                if (e.key === 'Escape') {
+                    contentDiv.innerHTML = currentContent;
+                }
+            });
+        }
+        
+        // Remove block
+        function removeBlock(blockId) {
+            const blockIndex = petState.blocks.findIndex(b => b.id === blockId);
+            if (blockIndex === -1) return;
+            
+            // Remove from state
+            petState.blocks.splice(blockIndex, 1);
+            
+            // Remove from DOM
+            const blockElement = document.getElementById(blockId);
+            blockElement.style.animation = 'blockAppear 0.2s ease-in reverse';
+            setTimeout(() => {
+                blockElement.remove();
+                updateUI();
+                
+                // Show empty state if no blocks and no suggestions
+                if (petState.blocks.length === 0 && document.querySelectorAll('.suggestion-card').length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                }
+            }, 200);
+        }
+        
+        // Move block up
+        function moveBlockUp(blockId) {
+            const blockIndex = petState.blocks.findIndex(b => b.id === blockId);
+            if (blockIndex <= 0) return;
+            
+            // Swap in array
+            [petState.blocks[blockIndex], petState.blocks[blockIndex - 1]] = 
+            [petState.blocks[blockIndex - 1], petState.blocks[blockIndex]];
+            
+            // Re-render workspace
+            rerenderWorkspace();
+            updateUI();
+        }
+        
+        // Move block down
+        function moveBlockDown(blockId) {
+            const blockIndex = petState.blocks.findIndex(b => b.id === blockId);
+            if (blockIndex >= petState.blocks.length - 1) return;
+            
+            // Swap in array
+            [petState.blocks[blockIndex], petState.blocks[blockIndex + 1]] = 
+            [petState.blocks[blockIndex + 1], petState.blocks[blockIndex]];
+            
+            // Re-render workspace
+            rerenderWorkspace();
+            updateUI();
+        }
+        
+        // Re-render entire workspace
+        function rerenderWorkspace() {
+            const container = document.getElementById('blocksContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Clear container except empty state
+            Array.from(container.children).forEach(child => {
+                if (child.id !== 'emptyState') {
+                    child.remove();
+                }
+            });
+            
+            // Re-render all blocks (suggestions will be cleared)
+            petState.blocks.forEach(block => {
+                renderBlock(block);
+            });
+            
+            // Handle empty state
+            if (petState.blocks.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+        
+        // Update all UI elements
+        async function updateUI() {
+            updateConstraintBar();
+            updateBlockButtons();
+            await updateValidationScore();
+            updateCompilation();
+        }
+        
+        // Update constraint progress bar
+        function updateConstraintBar() {
+            const count = petState.blocks.length;
+            const percentage = (count / petState.maxBlocks) * 100;
+            
+            const fill = document.getElementById('constraintFill');
+            const text = document.getElementById('constraintText');
+            const label = document.getElementById('constraintLabel');
+            
+            // Update visual elements
+            fill.style.width = `${percentage}%`;
+            text.textContent = `${count}/${petState.maxBlocks}`;
+            label.textContent = `BLOCKS: ${count} / ${petState.maxBlocks}`;
+            
+            // Color coding
+            fill.className = 'constraint-fill';
+            if (percentage >= 80) {
+                fill.classList.add('danger');
+            } else if (percentage >= 60) {
+                fill.classList.add('warning');
+            }
+        }
+        
+        // Update block button states
+        function updateBlockButtons() {
+            const isAtLimit = petState.blocks.length >= petState.maxBlocks;
+            
+            document.querySelectorAll('.block-button').forEach(button => {
+                if (isAtLimit) {
+                    button.classList.add('disabled');
+                } else {
+                    button.classList.remove('disabled');
+                }
+            });
+        }
+        
+        // Calculate and update validation score using Ollama (with fallback)
+        async function updateValidationScore() {
+            if (petState.blocks.length === 0) {
+                petState.currentScore = 0;
+                document.getElementById('validationScore').textContent = 'SCORE: --/100';
+                return;
+            }
+            
+            try {
+                // Try Ollama first, fallback to rule-based AI
+                const validation = await petOllama.validatePrompt(petState.blocks);
+                petState.currentScore = validation.score;
+                
+                document.getElementById('validationScore').textContent = `SCORE: ${validation.score}/100`;
+                
+                // Show AI feedback if available
+                if (validation.feedback && validation.feedback.length > 0) {
+                    showValidationFeedback(validation.feedback);
+                }
+            } catch (error) {
+                console.error('❌ Ollama validation failed, using fallback:', error);
+                // Fallback to rule-based AI
+                const validation = await petAI.validatePrompt(petState.blocks);
+                petState.currentScore = validation.score;
+                document.getElementById('validationScore').textContent = `SCORE: ${validation.score}/100`;
+            }
+            
+            // Update individual block scores
+            petState.blocks.forEach(block => {
+                const scoreElement = document.getElementById(`score_${block.id}`);
+                if (scoreElement) {
+                    const blockScore = calculateBlockScore(block);
+                    scoreElement.textContent = `${blockScore}%`;
+                }
+            });
+        }
+        
+        // Show validation feedback
+        function showValidationFeedback(feedback) {
+            const scoreElement = document.getElementById('validationScore');
+            const feedbackText = feedback.join(' | ');
+            scoreElement.title = feedbackText;
+            
+            // Add visual indicator for AI feedback
+            if (petOllama.getStatus().isAvailable) {
+                scoreElement.innerHTML = `SCORE: ${petState.currentScore}/100 <span style="color: #00aa00; font-size: 10px;">🤖</span>`;
+            }
+        }
+        
+        // Calculate individual block score
+        function calculateBlockScore(block) {
+            let score = 50; // Base score
+            
+            // Content quality
+            if (!block.content.includes('[') && block.content.length > 10) score += 30;
+            if (block.content.length > 50) score += 10;
+            if (block.content.length > 100) score += 10;
+            
+            return Math.min(100, score);
+        }
+        
+        // Update compilation output
+        function updateCompilation() {
+            const output = document.getElementById('outputContent');
+            
+            if (petState.blocks.length === 0) {
+                output.innerHTML = `Your final AI prompt will appear here automatically as you build...<br><br>This is what you'll copy and paste to your favorite AI assistant!`;
+                return;
+            }
+            
+            // Compile blocks in order
+            let compilation = '';
+            petState.blocks.forEach((block, index) => {
+                const blockHeader = `${block.symbol}-BLOCK (${block.name}):`;
+                compilation += `${blockHeader}\n${block.content}\n\n`;
+            });
+            
+            // Add metadata
+            compilation += `---\nMETADATA:\n`;
+            compilation += `• Built with PET (Prompt Engineering Tetris)\n`;
+            compilation += `• Blocks: ${petState.blocks.length}/${petState.maxBlocks}\n`;
+            compilation += `• Quality Score: ${petState.currentScore}/100\n`;
+            compilation += `• Created: ${new Date().toLocaleTimeString()}`;
+            
+            output.textContent = compilation;
+        }
+        
+        // Show constraint warning
+        function showConstraintWarning() {
+            const label = document.getElementById('constraintLabel');
+            const originalText = label.textContent;
+            label.textContent = '⚠ MAXIMUM 15 BLOCKS REACHED ⚠';
+            label.style.color = '#ff4400';
+            
+            setTimeout(() => {
+                label.textContent = originalText;
+                label.style.color = '';
+            }, 2000);
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Number keys 1-7 for quick block addition
+            if (e.key >= '1' && e.key <= '7' && !e.ctrlKey && !e.metaKey) {
+                const blockTypes = ['who', 'what', 'dont', 'how', 'think', 'show', 'use'];
+                const blockType = blockTypes[parseInt(e.key) - 1];
+                if (blockType) {
+                    addBlock(blockType);
+                }
+            }
+        });
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializePET);
+        
+        // Demo: Add sample content after page loads
+        setTimeout(() => {
+            const heartInput = document.getElementById('heartInput');
+            heartInput.value = "Help me write a bedtime story about a friendly dragon";
+            petState.heartPrompt = heartInput.value;
+            
+            // Trigger suggestions after demo text
+            setTimeout(() => {
+                generateSuggestions();
+            }, 1500);
+        }, 1000);
+    </script>
+</body>
+</html> 
