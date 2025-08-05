@@ -593,7 +593,7 @@
             <h1 class="title">PET</h1>
             <div class="subtitle">Prompt Engineering Tetris</div>
         </header>
-        
+
         <!-- Heart of Prompt -->
         <section class="heart-section">
             <div class="heart-label">💡 WHAT DO YOU WANT THE AI TO HELP YOU WITH?</div>
@@ -608,7 +608,7 @@
             </div>
         </section>
         
-        <!-- Block Toolbox -->
+            <!-- Block Toolbox -->
         <section class="toolbox">
             <div class="toolbox-label">🧱 ADD BLOCKS MANUALLY</div>
             <div class="block-buttons">
@@ -621,7 +621,7 @@
                     <div class="block-symbol">▀▀▀▀</div>
                     <div class="block-name">WHAT</div>
                     <div class="block-question">What should it do?</div>
-                </div>
+                            </div>
                 <div class="block-button" data-type="dont" data-symbol="L">
                     <div class="block-symbol">▀&nbsp;&nbsp;<br>▀&nbsp;&nbsp;<br>▀▀</div>
                     <div class="block-name">DON'T</div>
@@ -681,7 +681,7 @@
             </div>
         </section>
     </div>
-    
+
     <!-- Scripts -->
     <script src="js/ai/prompt-engine.js"></script>
     <script src="js/ai/ollama-integration.js"></script>
@@ -943,7 +943,7 @@
                 </div>
                 <div class="suggestion-preview" id="preview_${cardId}">
                     ${suggestion.content}
-                </div>
+            </div>
                 <div class="suggestion-actions">
                     <button class="suggestion-button" onclick="addSuggestedBlock('${cardId}', '${suggestion.type}')">
                         + Add Block
@@ -1065,11 +1065,11 @@
                         <div class="control-button" onclick="moveBlockUp('${block.id}')" title="Move Up">↑</div>
                         <div class="control-button" onclick="moveBlockDown('${block.id}')" title="Move Down">↓</div>
                         <div class="control-button delete" onclick="removeBlock('${block.id}')" title="Remove Block">×</div>
-                    </div>
-                </div>
+            </div>
+        </div>
                 <div class="block-content">
                     <div class="content-display" id="content_${block.id}" onclick="editBlock('${block.id}')">${block.content}</div>
-                </div>
+    </div>
             `;
             
             container.appendChild(blockElement);
