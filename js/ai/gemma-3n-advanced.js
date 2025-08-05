@@ -7,7 +7,7 @@
 class PETGemma3NAdvanced {
     constructor() {
         this.baseUrl = 'http://localhost:11434';
-        this.model = 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:UD-Q4_K_XL';
+        this.model = 'gemma3:4b';
         this.isAvailable = false;
         this.fineTunedModel = null;
         this.trainingData = [];
