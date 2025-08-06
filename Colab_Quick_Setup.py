@@ -34,8 +34,24 @@ print("\n📋 Available files:")
 print("\n📦 Installing Unsloth and dependencies...")
 print("⏳ This will take 3-5 minutes...")
 
-!pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-!pip install --no-deps "trl<0.9.0" peft accelerate bitsandbytes
+# First check if we have GPU, if not, we'll install CPU-compatible versions
+import torch
+has_gpu = torch.cuda.is_available()
+
+if has_gpu:
+    print("🚀 Installing GPU-optimized versions...")
+    !pip install "unsloth[colab-ampere-new] @ git+https://github.com/unslothai/unsloth.git"
+    !pip install --no-deps "trl<0.9.0" peft accelerate bitsandbytes
+else:
+    print("⚠️  No GPU detected - installing CPU-compatible versions for testing...")
+    print("🔄 For production training, please enable GPU runtime first!")
+    !pip install torch transformers datasets
+    !pip install --no-deps "trl<0.9.0" peft accelerate
+    
+    # Create a fallback message
+    print("\n⚠️  IMPORTANT: CPU training will be extremely slow!")
+    print("   Please enable GPU: Runtime → Change runtime type → Hardware accelerator → GPU")
+    print("   Then restart this notebook for optimal performance.")
 
 print("✅ Dependencies installed!")
 
