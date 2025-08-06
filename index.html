@@ -394,8 +394,22 @@
             color: #ff4400;
         }
         
+        .control-button.minimize:hover {
+            background: #004400;
+            color: #ffff00;
+        }
+        
         .block-content {
             padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .block-content.collapsed {
+            display: none;
+        }
+        
+        .prompt-block.minimized .block-header {
+            border-bottom: 1px solid #00aa00;
         }
         
         .content-display {
@@ -684,9 +698,14 @@
 
     <!-- Scripts -->
     <script src="js/ai/prompt-engine.js"></script>
-    <script src="js/ai/ollama-integration.js"></script>
-    <script src="js/ai/gemma-3n-advanced.js"></script>
-    <script>
+    <script src="js/ai/advanced-rules.js" type="module"></script>
+    <script src="js/ai/ollama-integration.js" type="module"></script>
+    <script src="js/ai/gemma-3n-advanced.js" type="module"></script>
+    <script type="module">
+        // Import the classes
+        const { PETOllamaIntegration } = await import('./js/ai/ollama-integration.js');
+        const { PETGemma3NAdvanced } = await import('./js/ai/gemma-3n-advanced.js');
+        
         // Initialize AI Engines
         const petAI = new PETAIEngine();
         const petOllama = new PETOllamaIntegration();
@@ -1062,6 +1081,7 @@
                     </div>
                     <div class="block-controls">
                         <div class="block-score" id="score_${block.id}">--</div>
+                        <div class="control-button minimize" onclick="toggleMinimizeBlock('${block.id}')" title="Minimize/Expand Block">-</div>
                         <div class="control-button" onclick="moveBlockUp('${block.id}')" title="Move Up">↑</div>
                         <div class="control-button" onclick="moveBlockDown('${block.id}')" title="Move Down">↓</div>
                         <div class="control-button delete" onclick="removeBlock('${block.id}')" title="Remove Block">×</div>
@@ -1135,6 +1155,27 @@
                     document.getElementById('emptyState').style.display = 'block';
                 }
             }, 200);
+        }
+        
+        // Toggle minimize/expand block
+        function toggleMinimizeBlock(blockId) {
+            const blockElement = document.getElementById(blockId);
+            const blockContent = blockElement.querySelector('.block-content');
+            const minimizeBtn = blockElement.querySelector('.control-button.minimize');
+            
+            if (blockContent.classList.contains('collapsed')) {
+                // Expand block
+                blockContent.classList.remove('collapsed');
+                blockElement.classList.remove('minimized');
+                minimizeBtn.textContent = '-';
+                minimizeBtn.title = 'Minimize Block';
+            } else {
+                // Minimize block  
+                blockContent.classList.add('collapsed');
+                blockElement.classList.add('minimized');
+                minimizeBtn.textContent = '+';
+                minimizeBtn.title = 'Expand Block';
+            }
         }
         
         // Move block up

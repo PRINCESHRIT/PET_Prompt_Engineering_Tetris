@@ -4,237 +4,41 @@
  * Enhanced with 38 Advanced Prompt Engineering Rules
  */
 
+import { ADVANCED_RULES } from './advanced-rules.js';
+
 class PETOllamaIntegration {
     constructor() {
         this.baseUrl = 'http://localhost:11434';
-        this.model = 'gemma3:4b';
+        this.model = 'pet-gemma3-light';  // 🚀 LIGHTWEIGHT: Using Gemma 3 1B for fastest performance
+        this.fallbackModel = 'pet-enhanced';  // Fallback to fine-tuned model if light not available
         this.isAvailable = false;
-        this.advancedRules = this.initializeAdvancedRules();
+        this.isSpecialized = false;
+        this.advancedRules = ADVANCED_RULES;
         this.testConnection();
     }
 
     /**
-     * Initialize the 38 Advanced Prompt Engineering Rules
-     */
-    initializeAdvancedRules() {
-        return {
-            // 1. Core Abstraction & Compression
-            systemFraming: {
-                name: "System Framing",
-                description: "Frame the problem as a system with inputs, processes, and outputs",
-                template: "Define this as a system with inputs: {inputs}, processes: {processes}, outputs: {outputs}"
-            },
-            generatorFunction: {
-                name: "Generator Function Specification",
-                description: "Specify the underlying process to create outcomes",
-                template: "Generate {outcome} using {framework} where {constraint} is the key factor"
-            },
-            metaphorAbstraction: {
-                name: "Metaphor as Abstraction Layer",
-                description: "Map complex problems to simple metaphors",
-                template: "Act as {metaphor} to approach this problem: {context}"
-            },
-            constraintBased: {
-                name: "Constraint-Based Generation",
-                description: "Define what the output cannot be",
-                template: "Generate {output} while avoiding: {constraints}"
-            },
-            metaChainOfThought: {
-                name: "Meta-Level Chain of Thought",
-                description: "Reason through reasoning process",
-                template: "Explain your reasoning steps and why you chose this approach over alternatives"
-            },
-
-            // 2. Leverage & Power Dynamics
-            leverageWords: {
-                name: "Leverage Words",
-                description: "Use terms that force specific operation modes",
-                template: "Use {leverage_word} when {action} to ensure {outcome}"
-            },
-            informationFlow: {
-                name: "Information Flow Control",
-                description: "Explicitly control what to consider and ignore",
-                template: "Focus only on {focus_areas}; disregard {ignore_areas}"
-            },
-            roleImprinting: {
-                name: "Role-Based Imprinting",
-                description: "Assign specific, powerful personas",
-                template: "You are {role} with {background} who {capabilities}"
-            },
-            successMetric: {
-                name: "Success Metric Definition",
-                description: "Define how responses will be judged",
-                template: "The best answer is one that is {criteria} and contains {requirements}"
-            },
-            contextualDatabase: {
-                name: "Contextual Database Pre-loading",
-                description: "Provide curated facts before main query",
-                template: "Given these facts: {facts}, now {main_query}"
-            },
-
-            // 3. Temporal & Evolutionary Thinking
-            futureStates: {
-                name: "Future States Projection",
-                description: "Project trends and future possibilities",
-                template: "Given {current_state}, what are {number} plausible scenarios for {timeframe}?"
-            },
-            recursiveCorrection: {
-                name: "Recursive Self-Correction",
-                description: "Critique and improve previous outputs",
-                template: "Review your response. Identify {number} weaknesses and generate an improved version"
-            },
-            simulationFraming: {
-                name: "Simulation Framing",
-                description: "Treat as simulator for complex systems",
-                template: "Simulate {system} where {change} occurs. Describe the {timeframe} of change"
-            },
-            counterfactualAnalysis: {
-                name: "Counterfactual Analysis",
-                description: "Explore 'what if' scenarios",
-                template: "What would be the outcome if {scenario} had been different?"
-            },
-            phaseChange: {
-                name: "Phase Change Identification",
-                description: "Identify tipping points and transformations",
-                template: "Identify the conditions under which {system} would undergo fundamental transformation"
-            },
-
-            // 4. Meta-Reasoning & Symmetries
-            crossDomainSymmetry: {
-                name: "Cross-Domain Symmetry",
-                description: "Map patterns across domains",
-                template: "Explain how {concept1} from {domain1} applies to {concept2} in {domain2}"
-            },
-            narrativeDeconstruction: {
-                name: "Narrative Arc Deconstruction",
-                description: "Break down into core components",
-                template: "Deconstruct this into: protagonist ({protagonist}), antagonist ({antagonist}), conflict ({conflict}), resolution ({resolution})"
-            },
-            underlyingAlgorithm: {
-                name: "Underlying Algorithm Discovery",
-                description: "Propose generative algorithms",
-                template: "What is the computational logic behind {phenomenon}?"
-            },
-            minimumViableModel: {
-                name: "Minimum Viable Model",
-                description: "Simplify to essential form",
-                template: "Explain {complex_concept} using only {constraints} to force high-level compression"
-            },
-            selfReferentialLoops: {
-                name: "Self-Referential Loop Analysis",
-                description: "Identify feedback loops",
-                template: "Describe the feedback loop between {element1} and {element2} in {system}"
-            },
-
-            // 5. Tactical Precision & Asymmetric Advantage
-            negativeConstraints: {
-                name: "Negative Constraint Refinement",
-                description: "Use negative constraints to refine output",
-                template: "Generate {output} that avoids: {negative_constraints}"
-            },
-            multiVariatePrompting: {
-                name: "Multi-Variate Prompting",
-                description: "Combine multiple non-obvious constraints",
-                template: "Generate {output} that is both {constraint1} and {constraint2}, while avoiding {avoidance}"
-            },
-            uncertaintyAcknowledgment: {
-                name: "Uncertainty Acknowledgment",
-                description: "Force acknowledgment of uncertainty",
-                template: "What is the most likely outcome, and what is the probability of {failure_scenario}?"
-            },
-            surgicalFormat: {
-                name: "Surgical Format Precision",
-                description: "Pre-define output format with precision",
-                template: "Create {format} with columns: {columns}. Ensure {requirements}"
-            },
-            antiPattern: {
-                name: "Anti-Pattern Rule",
-                description: "Actively avoid specific styles or mistakes",
-                template: "Do not use {anti_patterns}. Instead, use {preferred_style}"
-            },
-
-            // 6. Operationalizing the Process
-            chainOfCommand: {
-                name: "Chain of Command",
-                description: "Break into sequential steps",
-                template: "Step 1: {step1}. Step 2: {step2}. Step 3: {step3}"
-            },
-            preMortem: {
-                name: "Pre-Mortem Analysis",
-                description: "Assume failure and work backward",
-                template: "Assume {project} fails. What were the {number} most likely reasons for failure?"
-            },
-            devilsAdvocate: {
-                name: "Devil's Advocate Role",
-                description: "Argue against own conclusion",
-                template: "Provide {number} strong arguments against the solution you just proposed"
-            },
-            dynamicParameterization: {
-                name: "Dynamic Parameterization",
-                description: "Create function-like prompts",
-                template: "Given {items}, categorize them into {categories} based on {principle}"
-            },
-            redTeamAnalysis: {
-                name: "Red Team Analysis",
-                description: "Think like an adversary",
-                template: "If you were a competitor, what would be the most effective way to disrupt {target}?"
-            },
-
-            // 7. Meta-Cognition & Calibration
-            confidenceJustification: {
-                name: "Confidence Justification",
-                description: "Justify own confidence level",
-                template: "On a scale of 1-10, how confident are you in this answer, and why?"
-            },
-            toneCalibration: {
-                name: "Tone and Voice Calibration",
-                description: "Define specific tone and voice",
-                template: "Respond in the style of {style} with {characteristics}"
-            },
-            unknownUnknowns: {
-                name: "Unknown Unknowns",
-                description: "Identify missing information",
-                template: "What crucial data is absent that, if included, would change the conclusion?"
-            },
-            fiveWhys: {
-                name: "Five Whys Technique",
-                description: "Ask why recursively",
-                template: "For this answer, ask 'Why?' five times to reach the root cause"
-            },
-            linguisticScaffolding: {
-                name: "Linguistic Scaffolding",
-                description: "Use sentence structures to guide responses",
-                template: "The core tension lies between {element1} and {element2}. Explain the dynamics of this tension"
-            },
-
-            // 8. Advanced Recursive Techniques
-            promptGeneration: {
-                name: "Prompt Generation",
-                description: "Generate the next prompt",
-                template: "Based on your output, generate the most effective follow-up prompt to continue this inquiry"
-            },
-            treeOfThoughts: {
-                name: "Tree of Thoughts",
-                description: "Generate multiple solution paths",
-                template: "Generate {number} distinct strategies. Evaluate each on {metric}. Expand on the highest-rated strategy"
-            },
-            reflectivePrompting: {
-                name: "Reflective Prompting",
-                description: "Re-contextualize with new information",
-                template: "Given new information: {new_info}, re-evaluate your previous conclusion and explain the change"
-            }
-        };
-    }
-
-    /**
-     * Test connection to Ollama
+     * Test connection to Ollama and check for specialized model
      */
     async testConnection() {
         try {
             const response = await fetch(`${this.baseUrl}/api/tags`);
             if (response.ok) {
                 this.isAvailable = true;
-                console.log('✅ Ollama connection successful');
+                
+                // Check for specialized model
+                const data = await response.json();
+                const models = data.models || [];
+                this.isSpecialized = models.some(model => 
+                    model.name.includes('pet-gemma3-light')
+                );
+                
+                if (this.isSpecialized) {
+                    console.log('🚀 PET Lightweight model available - Fast mode activated!');
+                } else {
+                    console.log('✅ Ollama connection successful - Using fallback model');
+                    this.model = this.fallbackModel;
+                }
             } else {
                 console.warn('⚠️ Ollama not available, using fallback');
             }
@@ -378,9 +182,9 @@ Only return valid JSON, no other text.
                 prompt: prompt,
                 stream: false,
                 options: {
-                    temperature: 0.7,
-                    top_p: 0.9,
-                    max_tokens: 800,
+                    temperature: 0.4,      // ⚡ OPTIMIZED: Reduced for speed and focus
+                    top_p: 0.85,           // ⚡ OPTIMIZED: More focused responses  
+                    max_tokens: 200,       // ⚡ OPTIMIZED: 4x faster token generation
                     repeat_penalty: 1.1,
                     top_k: 40
                 }
@@ -799,4 +603,5 @@ Return format:
 }
 
 // Export for PET
+export { PETOllamaIntegration };
 window.PETOllamaIntegration = PETOllamaIntegration;

@@ -1,0 +1,17 @@
+FROM ./pet_specialized_final
+
+PARAMETER temperature 0.3
+PARAMETER num_ctx 2048
+PARAMETER top_k 10
+PARAMETER top_p 0.8
+PARAMETER repeat_penalty 1.1
+
+SYSTEM """You are PET (Prompt Engineering Tetris), an expert AI assistant specializing in advanced prompt engineering techniques. You have deep knowledge of 38 sophisticated prompt engineering rules and can apply them contextually to help users create more effective prompts."""
+
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""

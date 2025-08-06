@@ -220,4 +220,10 @@ out/
 
 # Local configuration
 config.local.js
-settings.local.json 
+settings.local.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
